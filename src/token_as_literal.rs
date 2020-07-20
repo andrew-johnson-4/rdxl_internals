@@ -8,18 +8,14 @@ use proc_macro2::{Span, Literal};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::{Ident, Token, LitChar, LitBool, LitStr, LitInt};
 
-pub enum TokenLiteral {
-   LiteralString(LitStr),
-   String(String),
-}
 pub struct TokenAsLiteral {
-   pub token_literal: TokenLiteral,
+   pub token_literal: String,
    pub span: Span
 }
 impl TokenAsLiteral {
    pub fn new(ts: String, s: Span) -> TokenAsLiteral {
       TokenAsLiteral {
-         token_literal: TokenLiteral::String(ts),
+         token_literal: ts,
          span: s,
       }
    }
@@ -29,11 +25,7 @@ impl Parse for TokenAsLiteral {
     fn parse(input: ParseStream) -> Result<Self> {
         if input.peek(LitStr) {
            let b: LitStr = input.parse()?;
-           let span = b.span();
-           Ok(TokenAsLiteral {
-              token_literal: TokenLiteral::LiteralString(b),
-              span: span,
-           })
+           Ok(TokenAsLiteral::new(b.value(), b.span()))
         } else if input.peek(LitBool) {
            let b: LitBool = input.parse()?;
            Ok(TokenAsLiteral::new(format!("{}",b.value), b.span))
@@ -247,19 +239,10 @@ impl Parse for TokenAsLiteral {
 
 impl ToTokens for TokenAsLiteral {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self.token_literal {
-           TokenLiteral::String(ref s) => {
-              let l = Literal::string(&s);
-              (quote_spanned!{self.span.clone()=>
-                 stream.push_str(#l);
-              }).to_tokens(tokens);
-           },
-           TokenLiteral::LiteralString(ref l) => {
-              (quote_spanned!{self.span.clone()=>
-                 stream.push_str(#l);
-              }).to_tokens(tokens);
-           },
-        }
+        let l = Literal::string(&self.token_literal);
+        (quote_spanned!{self.span.clone()=>
+           stream.push_str(#l);
+        }).to_tokens(tokens);
     }
 }
 
