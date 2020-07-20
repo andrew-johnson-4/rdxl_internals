@@ -1,0 +1,18 @@
+[package]
+name = "rdxl_internals"
+version = "0.0.1"
+authors = ["Andrew <andrew@subarctic.org>"]
+license = "MIT OR Apache-2.0"
+description = "RDXL Internals"
+edition = "2018"
+readme = "README.md"
+repository = "https://github.com/andrew-johnson-4/rdxl_internals"
+keywords = ["syn","procedural","macro","parser"]
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = { version="1.0", features=["span-locations"] }
+
+[dependencies.syn]
+version = "1.0"
+features = ["full"]
