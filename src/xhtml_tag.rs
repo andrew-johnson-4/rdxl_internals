@@ -11,6 +11,7 @@ use syn::{Ident, Token, Expr, LitStr, braced};
 use syn::token::{Brace};
 
 use crate::xhtml::{XhtmlAttr,Xhtml};
+use crate::core::TokenAsLiteral;
 
 pub enum XhtmlAttrKey {
    S(String),
@@ -211,53 +212,8 @@ impl Parse for XhtmlTag {
                } else { None };
                attrs.push(( XhtmlAttrKey::G(expr,key), v ));
             } else {
-               let key = if input.peek(Token![as]) { let _:Token![as] = input.parse()?; "as".to_string()
-               } else if input.peek(Token![abstract]) { let _:Token![abstract] = input.parse()?; "abstract".to_string()
-               } else if input.peek(Token![become]) { let _:Token![become] = input.parse()?; "become".to_string()
-               } else if input.peek(Token![box]) { let _:Token![box] = input.parse()?; "box".to_string()
-               } else if input.peek(Token![break]) { let _:Token![break] = input.parse()?; "break".to_string()
-               } else if input.peek(Token![const]) { let _:Token![const] = input.parse()?; "const".to_string()
-               } else if input.peek(Token![continue]) { let _:Token![continue] = input.parse()?; "continue".to_string()
-               } else if input.peek(Token![crate]) { let _:Token![crate] = input.parse()?; "crate".to_string()
-               } else if input.peek(Token![do]) { let _:Token![do] = input.parse()?; "do".to_string()
-               } else if input.peek(Token![else]) { let _:Token![else] = input.parse()?; "else".to_string()
-               } else if input.peek(Token![enum]) { let _:Token![enum] = input.parse()?; "enum".to_string()
-               } else if input.peek(Token![extern]) { let _:Token![extern] = input.parse()?; "extern".to_string()
-               } else if input.peek(Token![final]) { let _:Token![final] = input.parse()?; "final".to_string()
-               } else if input.peek(Token![fn]) { let _:Token![fn] = input.parse()?; "fn".to_string()
-               } else if input.peek(Token![for]) { let _:Token![for] = input.parse()?; "for".to_string()
-               } else if input.peek(Token![if]) { let _:Token![if] = input.parse()?; "if".to_string()
-               } else if input.peek(Token![impl]) { let _:Token![impl] = input.parse()?; "impl".to_string()
-               } else if input.peek(Token![in]) { let _:Token![in] = input.parse()?; "in".to_string()
-               } else if input.peek(Token![let]) { let _:Token![let] = input.parse()?; "let".to_string()
-               } else if input.peek(Token![loop]) { let _:Token![loop] = input.parse()?; "loop".to_string()
-               } else if input.peek(Token![macro]) { let _:Token![macro] = input.parse()?; "macro".to_string()
-               } else if input.peek(Token![match]) { let _:Token![match] = input.parse()?; "match".to_string()
-               } else if input.peek(Token![mod]) { let _:Token![mod] = input.parse()?; "mod".to_string()
-               } else if input.peek(Token![move]) { let _:Token![move] = input.parse()?; "move".to_string()
-               } else if input.peek(Token![mut]) { let _:Token![mut] = input.parse()?; "mut".to_string()
-               } else if input.peek(Token![override]) { let _:Token![override] = input.parse()?; "override".to_string()
-               } else if input.peek(Token![priv]) { let _:Token![priv] = input.parse()?; "priv".to_string()
-               } else if input.peek(Token![pub]) { let _:Token![pub] = input.parse()?; "pub".to_string()
-               } else if input.peek(Token![ref]) { let _:Token![ref] = input.parse()?; "ref".to_string()
-               } else if input.peek(Token![return]) { let _:Token![return] = input.parse()?; "return".to_string()
-               } else if input.peek(Token![self]) { let _:Token![self] = input.parse()?; "self".to_string()
-               } else if input.peek(Token![Self]) { let _:Token![Self] = input.parse()?; "Self".to_string()
-               } else if input.peek(Token![static]) { let _:Token![static] = input.parse()?; "static".to_string()
-               } else if input.peek(Token![struct]) { let _:Token![struct] = input.parse()?; "struct".to_string()
-               } else if input.peek(Token![super]) { let _:Token![super] = input.parse()?; "super".to_string()
-               } else if input.peek(Token![trait]) { let _:Token![trait] = input.parse()?; "trait".to_string()
-               } else if input.peek(Token![type]) { let _:Token![type] = input.parse()?; "type".to_string()
-               } else if input.peek(Token![typeof]) { let _:Token![typeof] = input.parse()?; "typeof".to_string()
-               } else if input.peek(Token![unsafe]) { let _:Token![unsafe] = input.parse()?; "unsafe".to_string()
-               } else if input.peek(Token![unsized]) { let _:Token![unsized] = input.parse()?; "unsized".to_string()
-               } else if input.peek(Token![use]) { let _:Token![use] = input.parse()?; "use".to_string()
-               } else if input.peek(Token![virtual]) { let _:Token![virtual] = input.parse()?; "virtual".to_string()
-               } else if input.peek(Token![where]) { let _:Token![where] = input.parse()?; "where".to_string()
-               } else if input.peek(Token![while]) { let _:Token![while] = input.parse()?; "while".to_string()
-               } else if input.peek(Token![yield]) { let _:Token![yield] = input.parse()?; "yield".to_string()
-               } else if input.peek(LitStr) { let s:LitStr = input.parse()?; s.value()
-               } else { let key: Ident = input.parse()?; key.to_string() };
+               let t: TokenAsLiteral = input.parse()?;
+               let key = t.token_literal.clone();
                let v = if input.peek(Token![=]) {
                   let _eq: Token![=] = input.parse()?;
                   let attr_expr: XhtmlAttr = XhtmlAttr::parse(input, key.clone())?;
