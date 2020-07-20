@@ -15,22 +15,7 @@ pub use crate::xhtml_display_expr::XhtmlDisplayExpr;
 pub use crate::xhtml_expr::XhtmlExpr;
 pub use crate::xhtml_class_attr::XhtmlClassAttr;
 pub use crate::xhtml_attr::XhtmlAttr;
-
-pub enum XhtmlClassChild {
-   C(XhtmlClass),
-   D(XhtmlDisplayExpr)
-}
-impl Parse for XhtmlClassChild {
-    fn parse(input: ParseStream) -> Result<Self> {
-       if input.peek(Token![<]) && input.peek2(Token![?]) {
-          let d: XhtmlDisplayExpr = input.parse()?;
-          Ok(XhtmlClassChild::D(d))
-       } else {
-          let c: XhtmlClass = input.parse()?;
-          Ok(XhtmlClassChild::C(c))
-       }
-    }
-}
+pub use crate::xhtml_class_child::XhtmlClassChild;
 
 pub struct XhtmlClass {
    open: Token![<],
