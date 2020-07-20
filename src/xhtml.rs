@@ -108,7 +108,7 @@ impl XhtmlExprF {
     }
 }
 
-enum XhtmlExprE {
+pub enum XhtmlExprE {
    S(Expr),
    E(Expr),
    F(Token![for],Pat,Expr,Vec<XhtmlCrumb>),
@@ -823,7 +823,7 @@ impl Parse for XhtmlTag {
     }
 }
 
-enum XhtmlCrumb {
+pub enum XhtmlCrumb {
    L(LitStr),
    S(String, Span),
    T(XhtmlTag),
