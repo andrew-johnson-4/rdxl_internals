@@ -14,36 +14,7 @@ pub use crate::display_expr::XhtmlDisplayExpr;
 pub use crate::bracketed_expr::BracketedExpr;
 pub use crate::interpolate_expr::XhtmlExpr;
 pub use crate::xhtml_class_attr::XhtmlClassAttr;
-
-pub enum XhtmlAttr {
-   S(String),
-   F(BracketedExpr),
-   E(XhtmlExpr)
-}
-impl XhtmlAttr {
-   fn parse(input: ParseStream, key: String) -> Result<Self> {
-      if input.peek(Bracket) {
-         let f: BracketedExpr = BracketedExpr::parse(key.clone(),input)?;
-         Ok(XhtmlAttr::F(f))
-      } else if input.peek(Brace) {
-         let e: XhtmlExpr = input.parse()?;
-         Ok(XhtmlAttr::E(e))
-      } else if input.peek(LitBool) {
-         let b: LitBool = input.parse()?;
-         Ok(XhtmlAttr::S(format!("{}", b.value)))
-      } else if input.peek(LitInt) {
-         let b: LitInt = input.parse()?;
-         Ok(XhtmlAttr::S(format!("{}", b.base10_digits())))
-      } else if input.peek(LitChar) {
-         let b: LitChar = input.parse()?;
-         Ok(XhtmlAttr::S(format!("'{}'", b.value())))
-      } else {
-         let val: LitStr = input.parse()?;
-         Ok(XhtmlAttr::S(format!("{:?}",val.value())))
-      }
-   }
-}
-
+pub use crate::xhtml_attr::XhtmlAttr;
 
 pub enum XhtmlClassChild {
    C(XhtmlClass),
