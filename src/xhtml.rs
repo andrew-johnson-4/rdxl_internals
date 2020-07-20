@@ -10,9 +10,9 @@ use syn::parse::{Parse, ParseStream, Result, Error};
 use syn::{Ident, Token, Expr, LitChar, LitBool, LitStr, LitInt, braced};
 use syn::token::{Bracket,Brace};
 
-pub use crate::display_expr::XhtmlDisplayExpr;
 pub use crate::bracketed_expr::BracketedExpr;
-pub use crate::interpolate_expr::XhtmlExpr;
+pub use crate::xhtml_display_expr::XhtmlDisplayExpr;
+pub use crate::xhtml_expr::XhtmlExpr;
 pub use crate::xhtml_class_attr::XhtmlClassAttr;
 pub use crate::xhtml_attr::XhtmlAttr;
 
