@@ -107,7 +107,7 @@ impl XhtmlExprF {
     }
 }
 
-use crate::interpolate_expr::XhtmlExpr;
+pub use crate::interpolate_expr::XhtmlExpr;
 
 pub enum XhtmlClassAttr {
    Cl(XhtmlClass),
