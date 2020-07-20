@@ -31,9 +31,9 @@ impl ToTokens for XhtmlDisplay {
 }
 
 pub struct XhtmlDisplayExpr {
-   open: Token![<],
-   expr: XhtmlDisplay,
-   close: Token![>],
+   pub open: Token![<],
+   pub expr: XhtmlDisplay,
+   pub close: Token![>],
 }
 impl XhtmlDisplayExpr {
     pub fn span(&self) -> Span {
