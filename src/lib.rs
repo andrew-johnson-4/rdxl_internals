@@ -7,5 +7,6 @@ mod xhtml_expr;
 mod xhtml_attr;
 mod xhtml_class;
 mod xhtml_tag;
+mod xhtml_crumb;
 pub mod xhtml;
 
