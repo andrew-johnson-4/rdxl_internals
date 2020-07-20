@@ -10,73 +10,7 @@ use syn::parse::{Parse, ParseStream, Result, Error};
 use syn::{Ident, Token, Expr, LitChar, LitBool, LitStr, LitInt, bracketed, braced};
 use syn::token::{Bracket,Brace};
 
-pub enum XhtmlDisplay {
-   E(Expr),
-   X(Xhtml)
-}
-impl ToTokens for XhtmlDisplay {
-   fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-      match self {
-         XhtmlDisplay::E(e) => { e.to_tokens(tokens); }
-         XhtmlDisplay::X(xhtmls) => {
-            let expanded = quote_spanned! { xhtmls.span() =>
-               {
-                  let mut stream = String::new();
-                  #xhtmls
-                  stream
-               }
-            };
-            expanded.to_tokens(tokens);
-         }
-      }
-   }
-}
-
-pub struct XhtmlDisplayExpr {
-   open: Token![<],
-   expr: XhtmlDisplay,
-   close: Token![>],
-}
-impl XhtmlDisplayExpr {
-    pub fn span(&self) -> Span {
-       self.open.span.join(self.close.span).unwrap_or(self.open.span)
-    }
-}
-impl Parse for XhtmlDisplayExpr {
-    fn parse(input: ParseStream) -> Result<Self> {
-       let open: Token![<] = input.parse()?;
-       let _: Token![?] = input.parse()?;
-       let _: Token![>] = input.parse()?;
-
-       let expr = if input.peek(Brace) {
-          let content;
-          let content2;
-          let _ = braced!(content in input);
-          let _ = braced!(content2 in content);
-          let expr: Expr = content2.parse()?;
-          XhtmlDisplay::E(expr)
-       } else {
-          let xhtml: Xhtml = input.parse()?;
-          XhtmlDisplay::X(xhtml)
-       };
-
-       let _: Token![<] = input.parse()?;
-       let _: Token![/] = input.parse()?;
-       let _: Token![?] = input.parse()?;
-       let close: Token![>] = input.parse()?;
-
-       Ok(XhtmlDisplayExpr {
-          open: open,
-          expr: expr,
-          close: close,
-       })
-    }
-}
-impl ToTokens for XhtmlDisplayExpr {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-       self.expr.to_tokens(tokens);
-    }
-}
+pub use crate::display_expr::XhtmlDisplayExpr;
 
 pub struct XhtmlExprF {
    bracket: Bracket,
@@ -94,7 +28,7 @@ impl ToTokens for XhtmlExprF {
     }
 }
 impl XhtmlExprF {
-    fn span(&self) -> Span {
+    pub fn span(&self) -> Span {
        self.bracket.span
     }
     fn parse(context: String, input: ParseStream) -> Result<Self> {
@@ -119,7 +53,7 @@ pub enum XhtmlClassAttr {
    S(LitStr,String),
 }
 impl XhtmlClassAttr {
-   fn span(&self) -> Span {
+   pub fn span(&self) -> Span {
       match self {
          XhtmlClassAttr::Cl(cl) => { cl.span() },
          XhtmlClassAttr::F(b,_,_) => { b.span },
@@ -250,7 +184,7 @@ pub struct XhtmlClass {
    close: Token![>]
 }
 impl XhtmlClass {
-    fn span(&self) -> Span {
+    pub fn span(&self) -> Span {
        self.open.span.join(self.close.span).unwrap_or(self.open.span)
     }
 }
@@ -1017,7 +951,7 @@ pub struct Xhtml {
     crumbs: Vec<XhtmlCrumb>
 }
 impl Xhtml {
-    fn span(&self) -> Span {
+    pub fn span(&self) -> Span {
        if self.crumbs.len() > 0 {
           let mut span = self.crumbs[0].span();
           for c in self.crumbs[1..].iter() {
