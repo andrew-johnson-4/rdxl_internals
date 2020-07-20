@@ -7,7 +7,7 @@
 use quote::{format_ident, quote_spanned, TokenStreamExt, ToTokens};
 use proc_macro2::{Span, Literal};
 use syn::parse::{Parse, ParseStream, Result, Error};
-use syn::{Ident, Token, Expr, Pat, LitChar, LitBool, LitStr, LitInt, bracketed, braced};
+use syn::{Ident, Token, Expr, LitChar, LitBool, LitStr, LitInt, bracketed, braced};
 use syn::token::{Bracket,Brace};
 
 pub enum XhtmlDisplay {
@@ -107,185 +107,7 @@ impl XhtmlExprF {
     }
 }
 
-pub enum XhtmlExprE {
-   S(Expr),
-   E(Expr),
-   F(Token![for],Pat,Expr,Vec<XhtmlCrumb>),
-   W(Token![while],Expr,Vec<XhtmlCrumb>),
-   L(Token![let],Pat,Expr),
-   I(Token![if],Expr,Vec<XhtmlCrumb>,Vec<(Expr,Vec<XhtmlCrumb>)>,Vec<XhtmlCrumb>),
-   P(Token![loop],Vec<XhtmlCrumb>),
-}
-impl XhtmlExprE {
-    fn does_emit(&self) -> bool {
-       match self {
-          XhtmlExprE::S(_) => { false },
-          XhtmlExprE::E(_) => { true },
-          XhtmlExprE::F(_,_,_,_) => { true },
-          XhtmlExprE::P(_,_) => { true },
-          XhtmlExprE::W(_,_,_) => { true },
-          XhtmlExprE::L(_,_,_) => { false },
-          XhtmlExprE::I(_,_,_,_,_) => { true },
-       }
-    }
-}
-impl ToTokens for XhtmlExprE {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self {
-           XhtmlExprE::E(e) => {
-              (quote_spanned!{ syn::spanned::Spanned::span(e)=>
-                 stream.push_str(&#e.to_string());
-              }).to_tokens(tokens);
-           }, XhtmlExprE::S(e) => {
-              (quote_spanned!{ syn::spanned::Spanned::span(e)=>
-                 #e;
-              }).to_tokens(tokens);
-           }, XhtmlExprE::F(f,p,i,cs) => {
-              (quote_spanned!{f.span=>
-                 for #p in #i { #(#cs)* stream.push_str(" "); }
-              }).to_tokens(tokens);
-           }, XhtmlExprE::P(l,cs) => {
-              (quote_spanned!{l.span=>
-                 loop { #(#cs)* stream.push_str(" "); }
-              }).to_tokens(tokens);
-           }, XhtmlExprE::I(i,c,bs,es,e) => {
-              (quote_spanned!{i.span=>
-                if #c { #(#bs)* stream.push_str(" "); }
-              }).to_tokens(tokens);
-
-              for (c,e) in es.iter() {
-                 (quote_spanned!{i.span=>
-                    else if #c { #(#e)* stream.push_str(" "); }
-                 }).to_tokens(tokens);
-              }
-
-              if e.len() > 0 {
-                 (quote_spanned!{i.span=>
-                    else { #(#e)* stream.push_str(" "); }
-                 }).to_tokens(tokens);
-              }
-           }, XhtmlExprE::W(w,i,cs) => {
-              (quote_spanned!{w.span=>
-                 while #i { #(#cs)* stream.push_str(" "); }
-              }).to_tokens(tokens);
-           }, XhtmlExprE::L(t,l,e) => {
-              (quote_spanned!{t.span=>
-                 let #l = #e;
-              }).to_tokens(tokens);
-           }
-        }
-    }
-}
-impl Parse for XhtmlExprE {
-    fn parse(input: ParseStream) -> Result<Self> {
-       if input.peek(Token![for]) {
-          let _for: Token![for] = input.parse()?;
-          let pat: Pat = input.parse()?;
-          let _in: Token![in] = input.parse()?;
-          let iter: Expr = input.parse()?;
-          let content;
-          let content2;
-          let _brace1 = braced!(content in input);
-          let _brace2 = braced!(content2 in content);
-          let body: Vec<XhtmlCrumb> = content2.call(XhtmlCrumb::parse_outer)?;
-          Ok(XhtmlExprE::F(_for,pat,iter,body))
-       } else if input.peek(Token![loop]) {
-          let _loop: Token![loop] = input.parse()?;
-          let content;
-          let content2;
-          let _brace1 = braced!(content in input);
-          let _brace2 = braced!(content2 in content);
-          let body: Vec<XhtmlCrumb> = content2.call(XhtmlCrumb::parse_outer)?;
-          Ok(XhtmlExprE::P(_loop,body))
-       } else if input.peek(Token![while]) {
-          let _while: Token![while] = input.parse()?;
-          let iter: Expr = input.parse()?;
-          let content;
-          let content2;
-          let _brace1 = braced!(content in input);
-          let _brace2 = braced!(content2 in content);
-          let body: Vec<XhtmlCrumb> = content2.call(XhtmlCrumb::parse_outer)?;
-          Ok(XhtmlExprE::W(_while,iter,body))
-       } else if input.peek(Token![if]) {
-          let _if: Token![if] = input.parse()?;
-          let b: Expr = input.parse()?;
-          let mut es = Vec::new();
-          let mut e = Vec::new();
-          let content;
-          let content2;
-          let _brace1 = braced!(content in input);
-          let _brace2 = braced!(content2 in content);
-          let body: Vec<XhtmlCrumb> = content2.call(XhtmlCrumb::parse_outer)?;
-
-          while input.peek(Token![else]) && input.peek2(Token![if]) {
-             let _else: Token![else] = input.parse()?;
-             let _if: Token![if] = input.parse()?;
-             let b: Expr = input.parse()?;
-             let content;
-             let content2;
-             let _brace1 = braced!(content in input);
-             let _brace2 = braced!(content2 in content);
-             let e = content2.call(XhtmlCrumb::parse_outer)?;
-             es.push((b,e));
-          }
-
-          if input.peek(Token![else]) {
-             let _else: Token![else] = input.parse()?;
-             let content;
-             let content2;
-             let _brace1 = braced!(content in input);
-             let _brace2 = braced!(content2 in content);
-             e = content2.call(XhtmlCrumb::parse_outer)?;
-          }
-
-          Ok(XhtmlExprE::I(_if,b,body,es,e))
-       } else if input.peek(Token![let]) {
-          let _let: Token![let] = input.parse()?;
-          let pat: Pat = input.parse()?;
-          let _eq: Token![=] = input.parse()?;
-          let expr: Expr = input.parse()?;
-          if input.peek(Token![;]) {
-             let _: Token![;] = input.parse()?;
-          }
-          Ok(XhtmlExprE::L(_let,pat,expr))
-       } else {
-          let e: Expr = input.parse()?;
-          if input.peek(Token![;]) {
-             let _semi: Token![;] = input.parse()?;
-             Ok(XhtmlExprE::S(e))
-          } else {
-             Ok(XhtmlExprE::E(e))
-          }
-       }
-    }
-}
-
-pub struct XhtmlExpr {
-   brace_token1: Brace,
-   _brace_token2: Brace,
-   expr: XhtmlExprE
-}
-impl XhtmlExpr {
-    fn does_emit(&self) -> bool {
-       self.expr.does_emit()
-    }
-}
-impl Parse for XhtmlExpr {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let _content;
-        let content2;
-        Ok(XhtmlExpr {
-           brace_token1: braced!(_content in input),
-           _brace_token2: braced!(content2 in _content),
-           expr: content2.call(XhtmlExprE::parse)?,
-        })
-    }
-}
-impl ToTokens for XhtmlExpr {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        self.expr.to_tokens(tokens)
-    }
-}
+use crate::interpolate_expr::XhtmlExpr;
 
 pub enum XhtmlClassAttr {
    Cl(XhtmlClass),
@@ -831,7 +653,7 @@ pub enum XhtmlCrumb {
    C(XhtmlClass)
 }
 impl XhtmlCrumb {
-    fn does_emit(&self) -> bool {
+    pub fn does_emit(&self) -> bool {
        match self {
           XhtmlCrumb::L(_) => { true },
           XhtmlCrumb::S(_,_) => { true },
@@ -841,7 +663,7 @@ impl XhtmlCrumb {
           XhtmlCrumb::C(_) => { true },
        }
     }
-    fn span(&self) -> Span {
+    pub fn span(&self) -> Span {
         match self {
             XhtmlCrumb::S(_,sp) => { sp.clone() }
             XhtmlCrumb::T(t) => { t.outer_span.clone() }
@@ -851,7 +673,7 @@ impl XhtmlCrumb {
             XhtmlCrumb::C(c) => { c.open.span.join(c.close.span).unwrap_or(c.open.span) }
         }
     }
-    fn parse_outer(input: ParseStream) -> Result<Vec<Self>> {
+    pub fn parse_outer(input: ParseStream) -> Result<Vec<Self>> {
         let mut cs = vec!();
         while input.peek(Ident) ||
               input.peek(LitBool) ||
