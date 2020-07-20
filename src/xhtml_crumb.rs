@@ -44,7 +44,8 @@ impl XhtmlCrumb {
     }
     pub fn parse_outer(input: ParseStream) -> Result<Vec<Self>> {
         let mut cs = vec!();
-        while !(input.peek(Token![<]) && input.peek2(Token![/])) {
+        while !input.is_empty() &&
+              !(input.peek(Token![<]) && input.peek2(Token![/])) {
            let c: XhtmlCrumb = input.parse()?;
            cs.push(c);
         }
