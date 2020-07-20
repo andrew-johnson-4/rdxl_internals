@@ -11,36 +11,7 @@ use syn::{Ident, Token, Expr, LitChar, LitBool, LitStr, LitInt, bracketed, brace
 use syn::token::{Bracket,Brace};
 
 pub use crate::display_expr::XhtmlDisplayExpr;
-
-pub struct XhtmlExprF {
-   bracket: Bracket,
-   context: String,
-   expr: Expr
-}
-impl ToTokens for XhtmlExprF {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-       let ref expr = self.expr;
-       let coerce = format_ident!("to_{}", self.context, span=self.bracket.span);
-
-       (quote_spanned! {self.bracket.span=>
-          stream.push_str(&#expr.#coerce());
-       }).to_tokens(tokens);
-    }
-}
-impl XhtmlExprF {
-    pub fn span(&self) -> Span {
-       self.bracket.span
-    }
-    fn parse(context: String, input: ParseStream) -> Result<Self> {
-       let content;
-       let content2;
-       let bracket1 = bracketed!(content in input);
-       let _bracket2 = bracketed!(content2 in content);
-       let expr: Expr = content2.parse()?;
-       Ok(XhtmlExprF{ bracket:bracket1, context:context, expr:expr })
-    }
-}
-
+pub use crate::bracketed_expr::BracketedExpr;
 pub use crate::interpolate_expr::XhtmlExpr;
 
 pub enum XhtmlClassAttr {
@@ -132,13 +103,13 @@ impl ToTokens for XhtmlClassAttr {
 
 pub enum XhtmlAttr {
    S(String),
-   F(XhtmlExprF),
+   F(BracketedExpr),
    E(XhtmlExpr)
 }
 impl XhtmlAttr {
    fn parse(input: ParseStream, key: String) -> Result<Self> {
       if input.peek(Bracket) {
-         let f: XhtmlExprF = XhtmlExprF::parse(key.clone(),input)?;
+         let f: BracketedExpr = BracketedExpr::parse(key.clone(),input)?;
          Ok(XhtmlAttr::F(f))
       } else if input.peek(Brace) {
          let e: XhtmlExpr = input.parse()?;
@@ -583,7 +554,7 @@ pub enum XhtmlCrumb {
    S(String, Span),
    T(XhtmlTag),
    E(XhtmlExpr),
-   F(XhtmlExprF),
+   F(BracketedExpr),
    C(XhtmlClass)
 }
 impl XhtmlCrumb {
@@ -710,7 +681,7 @@ impl Parse for XhtmlCrumb {
            let t: XhtmlTag = input.parse()?;
            Ok(XhtmlCrumb::T(t))
         } else if input.peek(Bracket) {
-           let f: XhtmlExprF = XhtmlExprF::parse("markup".to_string(),input)?;
+           let f: BracketedExpr = BracketedExpr::parse("markup".to_string(),input)?;
            Ok(XhtmlCrumb::F(f))
         } else if input.peek(Brace) {
            let e: XhtmlExpr = input.parse()?;
