@@ -5,5 +5,6 @@ mod xhtml_class_child;
 mod xhtml_display_expr;
 mod xhtml_class_attr;
 mod xhtml_attr;
+mod xhtml_class;
 pub mod xhtml;
 
