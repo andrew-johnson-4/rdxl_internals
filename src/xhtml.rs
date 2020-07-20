@@ -9,7 +9,6 @@ use proc_macro2::{Span, Literal};
 use syn::parse::{Parse, ParseStream, Result, Error};
 use syn::{Ident, Token, Expr, Pat, LitChar, LitBool, LitStr, LitInt, bracketed, braced};
 use syn::token::{Bracket,Brace};
-use syn::spanned::Spanned;
 
 pub enum XhtmlDisplay {
    E(Expr),
@@ -20,7 +19,7 @@ impl ToTokens for XhtmlDisplay {
       match self {
          XhtmlDisplay::E(e) => { e.to_tokens(tokens); }
          XhtmlDisplay::X(xhtmls) => {
-            let expanded = quote_spanned! { xhtmls.gen_span() =>
+            let expanded = quote_spanned! { xhtmls.span() =>
                {
                   let mut stream = String::new();
                   #xhtmls
@@ -39,7 +38,7 @@ pub struct XhtmlDisplayExpr {
    close: Token![>],
 }
 impl XhtmlDisplayExpr {
-    pub fn gen_span(&self) -> Span {
+    pub fn span(&self) -> Span {
        self.open.span.join(self.close.span).unwrap_or(self.open.span)
     }
 }
@@ -95,7 +94,7 @@ impl ToTokens for XhtmlExprF {
     }
 }
 impl XhtmlExprF {
-    fn gen_span(&self) -> Span {
+    fn span(&self) -> Span {
        self.bracket.span
     }
     fn parse(context: String, input: ParseStream) -> Result<Self> {
@@ -134,11 +133,11 @@ impl ToTokens for XhtmlExprE {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         match self {
            XhtmlExprE::E(e) => {
-              (quote_spanned!{e.span()=>
+              (quote_spanned!{ syn::spanned::Spanned::span(e)=>
                  stream.push_str(&#e.to_string());
               }).to_tokens(tokens);
            }, XhtmlExprE::S(e) => {
-              (quote_spanned!{e.span()=>
+              (quote_spanned!{ syn::spanned::Spanned::span(e)=>
                  #e;
               }).to_tokens(tokens);
            }, XhtmlExprE::F(f,p,i,cs) => {
@@ -298,12 +297,12 @@ pub enum XhtmlClassAttr {
    S(LitStr,String),
 }
 impl XhtmlClassAttr {
-   fn gen_span(&self) -> Span {
+   fn span(&self) -> Span {
       match self {
          XhtmlClassAttr::Cl(cl) => { cl.span() },
          XhtmlClassAttr::F(b,_,_) => { b.span },
          XhtmlClassAttr::E(b,_) => { b.span },
-         XhtmlClassAttr::B(v,_) => { v.span() },
+         XhtmlClassAttr::B(v,_) => { v.span },
          XhtmlClassAttr::C(v,_) => { v.span() },
          XhtmlClassAttr::U(v,_) => { v.span() },
          XhtmlClassAttr::S(v,_) => { v.span() },
@@ -345,7 +344,7 @@ impl XhtmlClassAttr {
 }
 impl ToTokens for XhtmlClassAttr {
    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-      let span = self.gen_span();
+      let span = self.span();
       match self {
          XhtmlClassAttr::S(_,s) => {
             let l: Literal = Literal::string(&s);
@@ -429,13 +428,13 @@ pub struct XhtmlClass {
    close: Token![>]
 }
 impl XhtmlClass {
-    fn gen_span(&self) -> Span {
+    fn span(&self) -> Span {
        self.open.span.join(self.close.span).unwrap_or(self.open.span)
     }
 }
 impl ToTokens for XhtmlClass {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-       let span = self.gen_span();
+       let span = self.span();
 
        let name = format_ident!("{}", self.name, span=span);
        (quote_spanned!{span=>
@@ -453,7 +452,7 @@ impl ToTokens for XhtmlClass {
        for c in self.children.iter() {
           match c {
              XhtmlClassChild::C(c) => {
-                let span = c.gen_span();
+                let span = c.span();
                 let child_enum = format_ident!("{}Children", self.name, span=span);
                 let child_tag = format_ident!("{}", c.name, span=span);
                 (quote_spanned!{span=>
@@ -461,7 +460,7 @@ impl ToTokens for XhtmlClass {
                 }).to_tokens(&mut cs);
              },
              XhtmlClassChild::D(d) => {
-                let span = d.gen_span();
+                let span = d.span();
                 let child_enum = format_ident!("{}Children", self.name, span=span);
                 (quote_spanned!{span=>
                    #child_enum::Display(Box::new(#d)),
@@ -642,7 +641,7 @@ impl ToTokens for XhtmlTag {
               stream.push_str(#l);
            }).to_tokens(tokens);
 
-           if self.inner.crumbs.len()>0 && self.inner.gen_span().start() > self.inner_span_start.end() {
+           if self.inner.crumbs.len()>0 && self.inner.span().start() > self.inner_span_start.end() {
               let l = Literal::string(" ");
               (quote_spanned!{self.outer_span=>
                  stream.push_str(#l);
@@ -651,7 +650,7 @@ impl ToTokens for XhtmlTag {
 
            self.inner.to_tokens(tokens);
 
-           if self.inner.crumbs.len()>0 && self.inner.gen_span().end() < self.inner_span_end.start() {
+           if self.inner.crumbs.len()>0 && self.inner.span().end() < self.inner_span_end.start() {
               let l = Literal::string(" ");
               (quote_spanned!{self.outer_span=>
                  stream.push_str(#l);
@@ -847,7 +846,7 @@ impl XhtmlCrumb {
             XhtmlCrumb::S(_,sp) => { sp.clone() }
             XhtmlCrumb::T(t) => { t.outer_span.clone() }
             XhtmlCrumb::E(e) => { e.brace_token1.span.clone() }
-            XhtmlCrumb::F(f) => { f.gen_span() }
+            XhtmlCrumb::F(f) => { f.span() }
             XhtmlCrumb::L(l) => { l.span() }
             XhtmlCrumb::C(c) => { c.open.span.join(c.close.span).unwrap_or(c.open.span) }
         }
@@ -941,7 +940,7 @@ impl Parse for XhtmlCrumb {
            Ok(XhtmlCrumb::C(c))
         } else if input.peek(LitBool) {
            let b: LitBool = input.parse()?;
-           Ok(XhtmlCrumb::S(format!("{}",b.value), b.span()))
+           Ok(XhtmlCrumb::S(format!("{}",b.value), b.span))
         } else if input.peek(LitInt) {
            let b: LitInt = input.parse()?;
            Ok(XhtmlCrumb::S(b.base10_digits().to_string(), b.span()))
@@ -1183,7 +1182,7 @@ impl ToTokens for XhtmlCrumb {
               e.to_tokens(tokens);
            }
            XhtmlCrumb::C(c) => {
-              let span = c.gen_span();
+              let span = c.span();
               (quote_spanned!{span=>
                  stream.push_str(&#c.to_string());
               }).to_tokens(tokens);
@@ -1196,7 +1195,7 @@ pub struct Xhtml {
     crumbs: Vec<XhtmlCrumb>
 }
 impl Xhtml {
-    fn gen_span(&self) -> Span {
+    fn span(&self) -> Span {
        if self.crumbs.len() > 0 {
           let mut span = self.crumbs[0].span();
           for c in self.crumbs[1..].iter() {
