@@ -14,8 +14,8 @@ fn tag1() {
 #[test]
 fn tag2() {
    let t: XhtmlTag = parse_quote! { <div> </div> };
-   println!(".end(): {:?}", t.inner_span_start.end());
-   println!(".start(): {:?}", t.inner_span_end.start());
+   println!(".end(): {:?}", t.inner_span_start);
+   println!(".start(): {:?}", t.inner_span_end);
    assert!(
       t.inner_span_start.end() <
       t.inner_span_end.start()
