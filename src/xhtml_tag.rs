@@ -233,7 +233,7 @@ impl Parse for XhtmlTag {
               inner: Xhtml { crumbs: vec!() },
               outer_span: l1.span.join(r2.span).unwrap_or(l1.span),
               inner_span_start: r1.span.clone(),
-              inner_span_end: l1.span.clone(),
+              inner_span_end: r2.span.clone(),
            })
         } else {
            let l2: Token![>] = input.parse()?;
