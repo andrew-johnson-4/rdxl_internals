@@ -27,18 +27,15 @@ impl XhtmlClass {
 
 impl ToTokens for XhtmlClass {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+       let mut ds = proc_macro2::TokenStream::new();
        let span = self.span();
-
        let name = format_ident!("{}", self.name, span=span);
-       (quote_spanned!{span=>
-          #name::new()
-       }).to_tokens(tokens);
 
        for (k,v) in self.attrs.iter() {
-          let setter = format_ident!("set_{}", k, span=span);
+          let k = format_ident!("{}", k, span=span);
           (quote_spanned!{span=>
-               .#setter(#v)
-          }).to_tokens(tokens);
+            #k: #v,
+          }).to_tokens(&mut ds);
        }
 
        let mut cs = proc_macro2::TokenStream::new();
@@ -63,7 +60,14 @@ impl ToTokens for XhtmlClass {
        }
 
        (quote_spanned!{span=>
-         .set_children(vec![#cs])
+          children: vec![#cs],
+          ..std::default::Default::default()
+       }).to_tokens(&mut ds);
+
+       (quote_spanned!{span=>
+          #name {
+             #ds
+          }
        }).to_tokens(tokens);
     }
 }
