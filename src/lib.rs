@@ -8,6 +8,14 @@ mod xhtml_attr;
 mod xhtml_class;
 mod xhtml_tag;
 mod xhtml_crumb;
+mod xtext_class_child;
+mod xtext_display_expr;
+mod xtext_class_attr;
+mod xtext_expr;
+mod xtext_attr;
+mod xtext_class;
+mod xtext_tag;
+mod xtext_crumb;
 pub mod core;
 pub mod xhtml;
-
+pub mod xtext;
