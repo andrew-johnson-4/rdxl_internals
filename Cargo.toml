@@ -1,6 +1,6 @@
 [package]
 name = "rdxl_internals"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["Andrew <andrew@subarctic.org>"]
 license = "MIT OR Apache-2.0"
 description = "RDXL Internals"

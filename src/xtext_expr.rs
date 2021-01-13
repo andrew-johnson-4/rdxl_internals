@@ -31,31 +31,31 @@ impl ToTokens for XtextExprInner {
               }).to_tokens(tokens);
            }, XtextExprInner::F(f,p,i,cs) => {
               (quote_spanned!{f.span=>
-                 for #p in #i { #(#cs)* stream.push_str(" "); }
+                 for #p in #i { #(#cs)* }
               }).to_tokens(tokens);
            }, XtextExprInner::P(l,cs) => {
               (quote_spanned!{l.span=>
-                 loop { #(#cs)* stream.push_str(" "); }
+                 loop { #(#cs)* }
               }).to_tokens(tokens);
            }, XtextExprInner::I(i,c,bs,es,e) => {
               (quote_spanned!{i.span=>
-                if #c { #(#bs)* stream.push_str(" "); }
+                if #c { #(#bs)* }
               }).to_tokens(tokens);
 
               for (c,e) in es.iter() {
                  (quote_spanned!{i.span=>
-                    else if #c { #(#e)* stream.push_str(" "); }
+                    else if #c { #(#e)* }
                  }).to_tokens(tokens);
               }
 
               if e.len() > 0 {
                  (quote_spanned!{i.span=>
-                    else { #(#e)* stream.push_str(" "); }
+                    else { #(#e)* }
                  }).to_tokens(tokens);
               }
            }, XtextExprInner::W(w,i,cs) => {
               (quote_spanned!{w.span=>
-                 while #i { #(#cs)* stream.push_str(" "); }
+                 while #i { #(#cs)* }
               }).to_tokens(tokens);
            }, XtextExprInner::L(t,l,e) => {
               (quote_spanned!{t.span=>
